@@ -25,6 +25,9 @@ public class User {
     private String lastName;
     private String password;
 
+    @Column(nullable = false)
+    private Boolean isActive = true;
+
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
@@ -41,7 +44,7 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Cart cart;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user")
     private List<Order> orders;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
