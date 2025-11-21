@@ -5,6 +5,7 @@ import com.miniProject.miniShop.dto.CreateOrderRequest;
 import com.miniProject.miniShop.model.*;
 import com.miniProject.miniShop.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,5 +120,16 @@ public class OrderService {
 
         order.setStatus(newStatus);
         return orderRepository.save(order);
+    }
+
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    public List<Order> getOrdersByUserIdForAdmin(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 }
