@@ -30,6 +30,13 @@ public class AuthService {
 //    }
 
     public String login(String email, String password) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+//        if(user.getIsActive() == false) {
+//            throw new RuntimeException("User is disabled");
+//        }
+        if (Boolean.FALSE.equals(user.getIsActive())) { // เผื่อส่งค่ามาเป้น null
+            throw new RuntimeException("Account is disabled");
+        }
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
