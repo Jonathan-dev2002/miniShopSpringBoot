@@ -3,6 +3,7 @@ package com.miniProject.miniShop.config;
 import com.miniProject.miniShop.filter.JwtRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 
 @Configuration //คลาสนี้คือไฟล์สำหรับตั้งค่
 @EnableWebSecurity //เปิดใช้งาน ระบบ Spring Security ทั้งหมด
+@EnableMethodSecurity //เพื่อให้ใช้ @PreAuthorize ได้
 public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
 
@@ -32,8 +34,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // ปิด CSRF (Lambda Expression)
                 .authorizeHttpRequests(auth -> auth
-                        // อนุญาตให้เข้าถึง API เหล่านี้ได้โดยไม่ต้องมีการตรวจสอบ (Login/Register)
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        // อนุญาตให้เข้าถึง API เหล่านี้ได้โดยไม่ต้องมีการตรวจสอบ
+                        .requestMatchers(SecurityConstants.PUBLIC_URLS).permitAll()
                         // สำหรับ API อื่นๆ ทั้งหมด ต้องมีการตรวจสอบ (JWT)
                         .anyRequest().authenticated()
                 )
