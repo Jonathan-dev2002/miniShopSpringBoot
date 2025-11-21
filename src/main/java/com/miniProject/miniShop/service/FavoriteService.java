@@ -6,6 +6,7 @@ import com.miniProject.miniShop.model.User;
 import com.miniProject.miniShop.repository.FavoriteRepository;
 import com.miniProject.miniShop.repository.ProductRepository;
 import com.miniProject.miniShop.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,21 @@ public class FavoriteService {
         return favoriteRepository.save(favorite);
     }
 
+    public Favorite addFavoriteByAdmin(UUID userId, UUID productId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (favoriteRepository.existsByUserAndProduct(user, product)) {
+            return favoriteRepository.findByUserAndProduct(user, product).get();
+        }
+
+        Favorite favorite = new Favorite();
+        favorite.setUser(user);
+        favorite.setProduct(product);
+        return favoriteRepository.save(favorite);
+    }
+
     public void removeFavorite(String email, UUID productId) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
@@ -46,5 +62,27 @@ public class FavoriteService {
     public List<Favorite> getMyFavorites(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         return favoriteRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+    }
+
+    public  List<Favorite> getAllFavoriteByAdmin() {
+        return   favoriteRepository.findAll();
+    }
+
+    public List<Favorite> getFavoritesByUserId(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return  favoriteRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+//        if(favorite.isEmpty()) {
+//            throw new RuntimeException("Favorite not found");
+//        }
+//        return favorite;
+    }
+
+    @Transactional
+    public void removeFavoriteByAdmin(UUID userId, UUID productId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+        Favorite favorite = favoriteRepository.findByUserAndProduct(user, product)
+                .orElseThrow(() -> new RuntimeException("Favorite item not found in user's list"));
+        favoriteRepository.delete(favorite);
     }
 }
