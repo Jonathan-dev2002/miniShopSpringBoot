@@ -1,5 +1,6 @@
 package com.miniProject.miniShop.service;
 
+import com.miniProject.miniShop.dto.UpdateStatusRequest;
 import com.miniProject.miniShop.dto.UserDto;
 import com.miniProject.miniShop.model.Role;
 import com.miniProject.miniShop.model.User;
@@ -60,7 +61,32 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User updateCurrentUser(String email, UserDto request){
+        User user = getUserByEmail(email);
+        if (user == null) throw new RuntimeException("User not found");
+
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+
+        return userRepository.save(user);
+    }
+
     public void deleteUser(UUID id) {
         userRepository.deleteById(id);
+    }
+
+    public User changeRole(UUID id, Role newRole) {
+        User user = getUserById(id);
+        if (user == null) throw new RuntimeException("User not found");
+
+        user.setRole(newRole);
+        return userRepository.save(user);
+    }
+
+    public User updateUserStatus(UUID id, UpdateStatusRequest request) {
+        User user = getUserById(id);
+        if(user == null) throw  new RuntimeException("User not found");
+        user.setIsActive(request.getIsActive());
+        return userRepository.save(user);
     }
 }
