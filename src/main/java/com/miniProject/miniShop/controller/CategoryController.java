@@ -5,6 +5,7 @@ import com.miniProject.miniShop.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -30,18 +31,22 @@ public class CategoryController {
         return ResponseEntity.ok(category);
     }
 
+    // --- Admin Routes ---
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createCategory(@RequestBody CategoryDto request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(categoryService.createCategory(request.getName()));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateCategory(@PathVariable UUID id, @RequestBody CategoryDto request) {
         return ResponseEntity.ok(categoryService.updateCategory(id, request.getName()));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteCategory(@PathVariable UUID id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
