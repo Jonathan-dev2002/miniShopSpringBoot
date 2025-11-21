@@ -98,4 +98,48 @@ public class AddressService {
         if (dto.getIsDefault() != null) address.setIsDefault(dto.getIsDefault());
         if (dto.getLabel() != null) address.setLabel(dto.getLabel());
     }
+
+    public List<Address> getAddressesByUserIdForAdmin(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        return addressRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Transactional
+    public Address createAddressForAdmin(UUID userId, AddressDto request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(request.getIsDefault())) {
+            unsetDefaultAddress(user.getId());
+        }
+
+        Address address = new Address();
+        address.setUser(user);
+        mapDtoToAddress(request, address);
+
+        return addressRepository.save(address);
+    }
+
+    @Transactional
+    public Address updateAddressByAdmin(UUID addressId, AddressDto request) {
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("Address not found"));
+
+        // ถ้ามีการเปลี่ยน Default ต้องไปเคลียร์ของ User เจ้าของที่อยู่นั้น
+        if (Boolean.TRUE.equals(request.getIsDefault()) && !address.getIsDefault()) {
+            unsetDefaultAddress(address.getUser().getId());
+        }
+
+        mapDtoToAddress(request, address);
+        return addressRepository.save(address);
+    }
+
+    public void deleteAddressByAdmin(UUID addressId) {
+        if (!addressRepository.existsById(addressId)) {
+            throw new RuntimeException("Address not found");
+        }
+        addressRepository.deleteById(addressId);
+    }
 }

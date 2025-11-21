@@ -5,6 +5,7 @@ import com.miniProject.miniShop.service.AddressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,34 @@ import java.util.UUID;
 public class AddressController {
     private final AddressService addressService;
 
+    // --- Admin Routes ---
+    @GetMapping("/admin/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getAddressesByUserId(@PathVariable UUID userId) {
+        return ResponseEntity.ok(addressService.getAddressesByUserIdForAdmin(userId));
+    }
+
+    @PostMapping("/admin/users/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createAddressForUser(@PathVariable UUID userId, @RequestBody AddressDto request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(addressService.createAddressForAdmin(userId, request));
+    }
+
+    @PutMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateAddressByAdmin(@PathVariable UUID id, @RequestBody AddressDto request) {
+        return ResponseEntity.ok(addressService.updateAddressByAdmin(id, request));
+    }
+
+    @DeleteMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteAddressByAdmin(@PathVariable UUID id) {
+        addressService.deleteAddressByAdmin(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // --- Public / User-specific Routes ---
     @PostMapping
     public ResponseEntity<?> createAddress(Authentication authentication, @RequestBody AddressDto request) {
         return ResponseEntity.status(HttpStatus.CREATED)
