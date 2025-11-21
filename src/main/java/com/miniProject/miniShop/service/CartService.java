@@ -34,25 +34,23 @@ public class CartService {
                 });
     }
 
-    public List<CartItem> getCartItems(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        Cart cart = getOrCreateCart(user);
-        return cartItemRepository.findByCartId(cart.getId());
-    }
+    private CartItem addItemToCartInternal(User user, AddToCartRequest request) {
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found"));
 
-    @Transactional
-    public CartItem addItemToCart(String email, AddToCartRequest request) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        Product product = productRepository.findById(request.getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
+        if (request.getQuantity() > product.getStock()) {
+            throw new RuntimeException("สินค้ามีไม่พอ (เหลือแค่ " + product.getStock() + " ชิ้น)");
+        }
 
         Cart cart = getOrCreateCart(user);
-
-        // เช็คว่ามีของชิ้นนี้ในตะกร้าหรือยัง
-        CartItem item = cartItemRepository.findByCartAndProduct(cart, product)
-                .orElse(null);
+        CartItem item = cartItemRepository.findByCartAndProduct(cart, product).orElse(null);
 
         if (item != null) {
-            item.setQuantity(item.getQuantity() + request.getQuantity());
+            int newQuantity = item.getQuantity() + request.getQuantity();
+            if (newQuantity > product.getStock()) {
+                throw new RuntimeException("รวมกับของเดิมแล้วเกินสต็อก (เหลือแค่ " + product.getStock() + " ชิ้น)");
+            }
+            item.setQuantity(newQuantity);
             return cartItemRepository.save(item);
         } else {
             CartItem newItem = new CartItem();
@@ -63,14 +61,42 @@ public class CartService {
         }
     }
 
+    public List<CartItem> getCartItems(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        Cart cart = getOrCreateCart(user);
+        return cartItemRepository.findByCartId(cart.getId());
+    }
+
+    @Transactional
+    public CartItem addItemToCart(String email, AddToCartRequest request) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        return addItemToCartInternal(user, request);
+    }
+
     public CartItem updateCartItem(UUID id, Integer quantity) {
         CartItem item = cartItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cart item not found"));
+        if (quantity > item.getProduct().getStock()) {
+            throw new RuntimeException("สินค้ามีไม่พอ (เหลือแค่ " + item.getProduct().getStock() + " ชิ้น)");
+        }
         item.setQuantity(quantity);
         return cartItemRepository.save(item);
     }
 
     public void removeCartItem(UUID id) {
         cartItemRepository.deleteById(id);
+    }
+
+    public List<CartItem> getCartItemsByUserId(UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Cart cart = getOrCreateCart(user);
+        return cartItemRepository.findByCartId(cart.getId());
+    }
+
+    @Transactional
+    public CartItem addItemToCartByUserId(UUID userId, AddToCartRequest request) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        // เรียกใช้ logic กลาง
+        return addItemToCartInternal(user, request);
     }
 }
