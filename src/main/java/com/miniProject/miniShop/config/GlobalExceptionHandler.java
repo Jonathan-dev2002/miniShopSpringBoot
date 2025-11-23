@@ -1,5 +1,6 @@
 package com.miniProject.miniShop.config;
 
+import com.miniProject.miniShop.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -11,25 +12,25 @@ import java.util.Map;
 @RestControllerAdvice //ดัก Error ทั้งแอป"
 public class GlobalExceptionHandler {
 
-    // ส่ง 400 Bad Request หรือ 404 Not Found กลับไป
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
-        if (e.getMessage().contains("not found")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+    public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException e) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        if (e.getMessage() != null && e.getMessage().toLowerCase().contains("not found")) {
+            status = HttpStatus.NOT_FOUND;
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        return ResponseEntity.status(status).body(ApiResponse.error(e.getMessage()));
     }
 
-    // ดัก Error 500
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGeneralException(Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal Server Error: " + e.getMessage()));
-    }
-    // ดักจับ Error Login/Authentication
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<?> handleAuthenticationException(AuthenticationException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED) // ส่ง 401
-                .body(Map.of("error", "Invalid email or password"));
+    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(AuthenticationException e) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Invalid email or password"));
+    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleGeneralException(Exception e) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Internal Server Error: " + e.getMessage()));
     }
 }

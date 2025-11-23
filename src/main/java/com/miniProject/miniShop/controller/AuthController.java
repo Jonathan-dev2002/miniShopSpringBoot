@@ -1,5 +1,6 @@
 package com.miniProject.miniShop.controller;
 
+import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.dto.AuthRequest;
 import com.miniProject.miniShop.dto.AuthResponse;
 import com.miniProject.miniShop.dto.UserDto;
@@ -21,15 +22,19 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UserDto request) {
-
+    public ResponseEntity<ApiResponse<User>> register(@RequestBody UserDto request) {
         User newUser = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+
+        // return ResponseEntity.status(HttpStatus.CREATED).body(newUser); // Code เก่า
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("User registered successfully", newUser));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody AuthRequest request) {
         String jwt = authService.login(request.getEmail(), request.getPassword());
-        return ResponseEntity.ok(new AuthResponse(jwt));
+
+        // return ResponseEntity.ok(new AuthResponse(jwt)); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success("Login successful", new AuthResponse(jwt)));
     }
 }

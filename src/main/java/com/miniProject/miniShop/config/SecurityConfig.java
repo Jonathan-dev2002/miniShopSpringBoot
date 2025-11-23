@@ -19,9 +19,15 @@ import org.springframework.security.config.annotation.authentication.configurati
 @EnableMethodSecurity //เพื่อให้ใช้ @PreAuthorize ได้
 public class SecurityConfig {
     private final JwtRequestFilter jwtRequestFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter,
+                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+                          CustomAccessDeniedHandler customAccessDeniedHandler) {
         this.jwtRequestFilter = jwtRequestFilter;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
     }
 
     @Bean
@@ -38,6 +44,10 @@ public class SecurityConfig {
                         .requestMatchers(SecurityConstants.PUBLIC_URLS).permitAll()
                         // สำหรับ API อื่นๆ ทั้งหมด ต้องมีการตรวจสอบ (JWT)
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint) // จัดการ 401
+                        .accessDeniedHandler(customAccessDeniedHandler)       // จัดการ 403
                 )
                 // บอก Spring Security ไม่ให้สร้างและใช้ Session (State-less)
                 .sessionManagement(session -> session

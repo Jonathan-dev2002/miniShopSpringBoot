@@ -1,5 +1,6 @@
 package com.miniProject.miniShop.controller;
 
+import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.dto.UpdateStatusRequest;
 import com.miniProject.miniShop.dto.UserDto;
 import com.miniProject.miniShop.model.Role;
@@ -12,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,8 +27,9 @@ public class UserController {
     // --- Admin Routes ---
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+        // return ResponseEntity.ok(userService.getAllUsers()); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers()));
     }
 
     @GetMapping("/admin/{id}")
@@ -34,22 +37,26 @@ public class UserController {
     public ResponseEntity<?> getUserById(@PathVariable UUID id) {
         User user = userService.getUserById(id);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            // return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found"); // Code เก่า
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("User not found"));
         }
-        return ResponseEntity.ok(user);
+        // return ResponseEntity.ok(user); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success(user));
     }
 
     @PutMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UserDto request) {
-        return ResponseEntity.ok(userService.updateUser(id, request));
+        // return ResponseEntity.ok(userService.updateUser(id, request)); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success("User updated successfully", userService.updateUser(id, request)));
     }
 
     @DeleteMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build(); // ลบสำเร็จส่ง 204 No Content
+        // return ResponseEntity.noContent().build(); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
     }
 
     @PatchMapping("/admin/{id}/role")
@@ -57,22 +64,27 @@ public class UserController {
     public ResponseEntity<?> changeRole(@PathVariable UUID id, @RequestBody Map<String, String> request) {
         String newRole = request.get("role");
         User updatedUser = userService.changeRole(id, Role.valueOf(newRole.toUpperCase()));
-        return ResponseEntity.ok(updatedUser);
+
+        // return ResponseEntity.ok(updatedUser); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success("Role updated successfully", updatedUser));
     }
 
     @PatchMapping("/admin/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> setUserStatus(@PathVariable UUID id, @RequestBody UpdateStatusRequest request) {
         if(request.getIsActive() == null){
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("isActive field is required");
+            // return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("isActive field is required"); // Code เก่า
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("isActive field is required"));
         }
-        return ResponseEntity.ok(userService.updateUserStatus(id,request));
+        // return ResponseEntity.ok(userService.updateUserStatus(id,request)); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success("Status updated successfully", userService.updateUserStatus(id, request)));
     }
 
     // --- Public / User-specific Routes ---
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody UserDto request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
+        // return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request)); // Code เก่า
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("User created successfully", userService.createUser(request)));
     }
 
     @GetMapping("/me")
@@ -81,11 +93,13 @@ public class UserController {
 //        if (user == null) {
 //            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 //        }
-        return ResponseEntity.ok(user);
+        // return ResponseEntity.ok(user); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success(user));
     }
 
     @PutMapping("/me")
     public ResponseEntity<?> editCurrentUser(Authentication authentication, @RequestBody UserDto request) {
-        return ResponseEntity.ok(userService.updateCurrentUser(authentication.getName(), request));
+        // return ResponseEntity.ok(userService.updateCurrentUser(authentication.getName(), request)); // Code เก่า
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", userService.updateCurrentUser(authentication.getName(), request)));
     }
 }
