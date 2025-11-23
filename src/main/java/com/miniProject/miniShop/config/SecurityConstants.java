@@ -6,7 +6,9 @@ public class SecurityConstants {
             "/api/auth/login",
             "/api/auth/register",
             "/api/products",
-            "/api/products/**",    // อนุญาตให้ดูรายละเอียดสินค้า (GetById)
-            "/api/categories/**"   // อนุญาตให้ดูหมวดหมู่
+            "/api/products/**",
+            "/api/categories",
+            "/api/categories/**"
+
     };
 }
