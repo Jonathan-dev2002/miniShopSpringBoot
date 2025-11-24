@@ -3,10 +3,12 @@ package com.miniProject.miniShop.controller;
 import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.dto.UpdateStatusRequest;
 import com.miniProject.miniShop.dto.UserDto;
+import com.miniProject.miniShop.dto.UserSearchRequest;
 import com.miniProject.miniShop.model.Role;
 import com.miniProject.miniShop.model.User;
 import com.miniProject.miniShop.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,11 +27,16 @@ public class UserController {
     private final UserService userService;
 
     // --- Admin Routes ---
+//    @GetMapping("/admin")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
+//        // return ResponseEntity.ok(userService.getAllUsers()); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers()));
+//    }
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
-        // return ResponseEntity.ok(userService.getAllUsers()); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers()));
+    public ResponseEntity<ApiResponse<Page<User>>> getAllUsers(@ModelAttribute UserSearchRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers(request)));
     }
 
     @GetMapping("/admin/{id}")
@@ -72,7 +79,7 @@ public class UserController {
     @PatchMapping("/admin/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> setUserStatus(@PathVariable UUID id, @RequestBody UpdateStatusRequest request) {
-        if(request.getIsActive() == null){
+        if (request.getIsActive() == null) {
             // return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("isActive field is required"); // Code เก่า
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("isActive field is required"));
         }

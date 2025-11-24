@@ -2,10 +2,12 @@ package com.miniProject.miniShop.controller;
 
 import com.miniProject.miniShop.dto.AddToCartRequest;
 import com.miniProject.miniShop.dto.ApiResponse;
+import com.miniProject.miniShop.dto.CartSearchRequest;
 import com.miniProject.miniShop.dto.UpdateCartRequest;
 import com.miniProject.miniShop.model.CartItem;
 import com.miniProject.miniShop.service.CartService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,11 +25,20 @@ public class CartController {
     private final CartService cartService;
 
     // --- Admin Routes ---
+//    @GetMapping("/admin/users/{userId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<List<CartItem>>> getCartByUserId(@PathVariable UUID userId) {
+//        // return ResponseEntity.ok(cartService.getCartItemsByUserId(userId)); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(cartService.getCartItemsByUserId(userId)));
+//    }
     @GetMapping("/admin/users/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<CartItem>>> getCartByUserId(@PathVariable UUID userId) {
-        // return ResponseEntity.ok(cartService.getCartItemsByUserId(userId)); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(cartService.getCartItemsByUserId(userId)));
+    // ปรับ Return Type และรับ Params
+    public ResponseEntity<ApiResponse<Page<CartItem>>> getCartByUserId(
+            @PathVariable UUID userId,
+            @ModelAttribute CartSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(cartService.getCartItemsByUserId(userId, request)));
     }
 
     @PostMapping("/admin/users/{userId}")
@@ -58,10 +69,17 @@ public class CartController {
     }
 
     // --- Public / User-specific Routes ---
+//    @GetMapping
+//    public ResponseEntity<ApiResponse<List<CartItem>>> getCart(Authentication authentication) {
+//        // return ResponseEntity.ok(cartService.getCartItems(authentication.getName())); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(cartService.getCartItems(authentication.getName())));
+//    }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CartItem>>> getCart(Authentication authentication) {
-        // return ResponseEntity.ok(cartService.getCartItems(authentication.getName())); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(cartService.getCartItems(authentication.getName())));
+    public ResponseEntity<ApiResponse<Page<CartItem>>> getCart(
+            Authentication authentication,
+            @ModelAttribute CartSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(cartService.getCartItems(authentication.getName(), request)));
     }
 
     @PostMapping("/items")

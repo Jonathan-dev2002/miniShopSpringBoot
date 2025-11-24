@@ -2,9 +2,11 @@ package com.miniProject.miniShop.controller;
 
 import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.dto.FavoriteDto;
+import com.miniProject.miniShop.dto.FavoriteSearchRequest;
 import com.miniProject.miniShop.model.Favorite;
 import com.miniProject.miniShop.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,18 +25,31 @@ public class FavoriteController {
     private final FavoriteService favoriteService;
 
     // --- Admin Routes ---
+//    @GetMapping("/admin")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<List<Favorite>>> getAllFavorites() {
+//        // return ResponseEntity.ok(favoriteService.getAllFavoriteByAdmin()); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(favoriteService.getAllFavoriteByAdmin()));
+//    }
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<Favorite>>> getAllFavorites() {
-        // return ResponseEntity.ok(favoriteService.getAllFavoriteByAdmin()); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(favoriteService.getAllFavoriteByAdmin()));
+    public ResponseEntity<ApiResponse<Page<Favorite>>> getAllFavorites(@ModelAttribute FavoriteSearchRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(favoriteService.getAllFavoriteByAdmin(request)));
     }
 
+    //    @GetMapping("/admin/users/{userId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<List<Favorite>>> getFavoritesByUserId(@PathVariable UUID userId) {
+//        // return ResponseEntity.ok(favoriteService.getFavoritesByUserId(userId)); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(favoriteService.getFavoritesByUserId(userId)));
+//    }
     @GetMapping("/admin/users/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<Favorite>>> getFavoritesByUserId(@PathVariable UUID userId) {
-        // return ResponseEntity.ok(favoriteService.getFavoritesByUserId(userId)); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(favoriteService.getFavoritesByUserId(userId)));
+    public ResponseEntity<ApiResponse<Page<Favorite>>> getFavoritesByUserId(
+            @PathVariable UUID userId,
+            @ModelAttribute FavoriteSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(favoriteService.getFavoritesByUserId(userId, request)));
     }
 
     @PostMapping("/admin/users/{userId}")
@@ -59,10 +74,17 @@ public class FavoriteController {
     }
 
     // --- Public / User-specific Routes ---
+//    @GetMapping
+//    public ResponseEntity<ApiResponse<List<Favorite>>> getMyFavorites(Authentication authentication) {
+//        // return ResponseEntity.ok(favoriteService.getMyFavorites(authentication.getName())); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(favoriteService.getMyFavorites(authentication.getName())));
+//    }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Favorite>>> getMyFavorites(Authentication authentication) {
-        // return ResponseEntity.ok(favoriteService.getMyFavorites(authentication.getName())); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(favoriteService.getMyFavorites(authentication.getName())));
+    public ResponseEntity<ApiResponse<Page<Favorite>>> getMyFavorites(
+            Authentication authentication,
+            @ModelAttribute FavoriteSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(favoriteService.getMyFavorites(authentication.getName(), request)));
     }
 
     @PostMapping

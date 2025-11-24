@@ -1,12 +1,19 @@
 package com.miniProject.miniShop.service;
 
 import com.miniProject.miniShop.dto.AddressDto;
+import com.miniProject.miniShop.dto.AddressSearchRequest;
 import com.miniProject.miniShop.model.Address;
 import com.miniProject.miniShop.model.User;
 import com.miniProject.miniShop.repository.AddressRepository;
 import com.miniProject.miniShop.repository.UserRepository;
+import com.miniProject.miniShop.spec.AddressSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,11 +26,20 @@ public class AddressService {
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
 
+    private Page<Address> getAddressesWithPagination(UUID userId, AddressSearchRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("isDefault").descending().and(Sort.by("createdAt").descending()));
+
+        Specification<Address> spec = Specification.where(AddressSpecification.hasUserId(userId))
+                .and(AddressSpecification.hasKeyword(request.getKeyword()));
+
+        return addressRepository.findAll(spec, pageable);
+    }
+
     @Transactional
     public Address createAddress(String email, AddressDto request) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (Boolean.TRUE.equals(request.getIsDefault() )) {
+        if (Boolean.TRUE.equals(request.getIsDefault())) {
             unsetDefaultAddress(user.getId());
         }
 
@@ -34,9 +50,13 @@ public class AddressService {
         return addressRepository.save(address);
     }
 
-    public List<Address> getAddressesByUserId(String email) {
+    //    public List<Address> getAddressesByUserId(String email) {
+//        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+//        return addressRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+//    }
+    public Page<Address> getAddressesByUserId(String email, AddressSearchRequest request) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        return addressRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        return getAddressesWithPagination(user.getId(), request);
     }
 
     public Address getAddressById(UUID id, String email) {
@@ -99,11 +119,17 @@ public class AddressService {
         if (dto.getLabel() != null) address.setLabel(dto.getLabel());
     }
 
-    public List<Address> getAddressesByUserIdForAdmin(UUID userId) {
+    //    public List<Address> getAddressesByUserIdForAdmin(UUID userId) {
+//        if (!userRepository.existsById(userId)) {
+//            throw new RuntimeException("User not found");
+//        }
+//        return addressRepository.findByUserIdOrderByCreatedAtDesc(userId);
+//    }
+    public Page<Address> getAddressesByUserIdForAdmin(UUID userId, AddressSearchRequest request) {
         if (!userRepository.existsById(userId)) {
             throw new RuntimeException("User not found");
         }
-        return addressRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return getAddressesWithPagination(userId, request);
     }
 
     @Transactional

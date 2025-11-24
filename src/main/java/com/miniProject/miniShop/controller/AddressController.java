@@ -1,10 +1,12 @@
 package com.miniProject.miniShop.controller;
 
 import com.miniProject.miniShop.dto.AddressDto;
+import com.miniProject.miniShop.dto.AddressSearchRequest;
 import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.model.Address;
 import com.miniProject.miniShop.service.AddressService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,11 +23,19 @@ public class AddressController {
     private final AddressService addressService;
 
     // --- Admin Routes ---
+//    @GetMapping("/admin/users/{userId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<List<Address>>> getAddressesByUserId(@PathVariable UUID userId) {
+//        // return ResponseEntity.ok(addressService.getAddressesByUserIdForAdmin(userId)); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(addressService.getAddressesByUserIdForAdmin(userId)));
+//    }
     @GetMapping("/admin/users/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<Address>>> getAddressesByUserId(@PathVariable UUID userId) {
-        // return ResponseEntity.ok(addressService.getAddressesByUserIdForAdmin(userId)); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(addressService.getAddressesByUserIdForAdmin(userId)));
+    public ResponseEntity<ApiResponse<Page<Address>>> getAddressesByUserId(
+            @PathVariable UUID userId,
+            @ModelAttribute AddressSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(addressService.getAddressesByUserIdForAdmin(userId, request)));
     }
 
     @PostMapping("/admin/users/{userId}")
@@ -59,10 +69,17 @@ public class AddressController {
                 .body(ApiResponse.success("Address created successfully", addressService.createAddress(authentication.getName(), request)));
     }
 
+    //    @GetMapping
+//    public ResponseEntity<ApiResponse<List<Address>>> getMyAddresses(Authentication authentication) {
+//        // return ResponseEntity.ok(addressService.getAddressesByUserId(authentication.getName())); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(addressService.getAddressesByUserId(authentication.getName())));
+//    }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Address>>> getMyAddresses(Authentication authentication) {
-        // return ResponseEntity.ok(addressService.getAddressesByUserId(authentication.getName())); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(addressService.getAddressesByUserId(authentication.getName())));
+    public ResponseEntity<ApiResponse<Page<Address>>> getMyAddresses(
+            Authentication authentication,
+            @ModelAttribute AddressSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(addressService.getAddressesByUserId(authentication.getName(), request)));
     }
 
     @GetMapping("/{id}")

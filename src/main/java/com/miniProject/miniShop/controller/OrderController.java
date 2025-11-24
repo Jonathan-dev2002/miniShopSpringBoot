@@ -2,10 +2,12 @@ package com.miniProject.miniShop.controller;
 
 import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.dto.CreateOrderRequest;
+import com.miniProject.miniShop.dto.OrderSearchRequest;
 import com.miniProject.miniShop.dto.UpdateOrderStatusRequest;
 import com.miniProject.miniShop.model.Order;
 import com.miniProject.miniShop.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,18 +25,32 @@ public class OrderController {
     private final OrderService orderService;
 
     // --- Public / User-specific Routes ---
+//    @GetMapping("/admin")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<List<Order>>> getAllOrders() {
+//        // return ResponseEntity.ok(orderService.getAllOrders()); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders()));
+//    }
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<Order>>> getAllOrders() {
-        // return ResponseEntity.ok(orderService.getAllOrders()); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders()));
+    // ปรับ Return Type และรับ Params
+    public ResponseEntity<ApiResponse<Page<Order>>> getAllOrders(@ModelAttribute OrderSearchRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders(request)));
     }
 
+    //    @GetMapping("/admin/users/{userId}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<ApiResponse<List<Order>>> getOrdersByUserId(@PathVariable UUID userId) {
+//        // return ResponseEntity.ok(orderService.getOrdersByUserIdForAdmin(userId)); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(orderService.getOrdersByUserIdForAdmin(userId)));
+//    }
     @GetMapping("/admin/users/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<Order>>> getOrdersByUserId(@PathVariable UUID userId) {
-        // return ResponseEntity.ok(orderService.getOrdersByUserIdForAdmin(userId)); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(orderService.getOrdersByUserIdForAdmin(userId)));
+    public ResponseEntity<ApiResponse<Page<Order>>> getOrdersByUserId(
+            @PathVariable UUID userId,
+            @ModelAttribute OrderSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.getOrdersByUserIdForAdmin(userId, request)));
     }
 
     @PutMapping("/admin/{id}/status")
@@ -45,10 +61,17 @@ public class OrderController {
     }
 
     // --- Public / User-specific Routes ---
+//    @GetMapping
+//    public ResponseEntity<ApiResponse<List<Order>>> getOrders(Authentication authentication) {
+//        // return ResponseEntity.ok(orderService.getMyOrders(authentication.getName())); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrders(authentication.getName())));
+//    }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Order>>> getOrders(Authentication authentication) {
-        // return ResponseEntity.ok(orderService.getMyOrders(authentication.getName())); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrders(authentication.getName())));
+    public ResponseEntity<ApiResponse<Page<Order>>> getOrders(
+            Authentication authentication,
+            @ModelAttribute OrderSearchRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(orderService.getMyOrders(authentication.getName(), request)));
     }
 
     @GetMapping("/{id}")

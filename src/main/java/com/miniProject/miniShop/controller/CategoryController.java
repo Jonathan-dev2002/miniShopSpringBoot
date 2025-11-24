@@ -2,9 +2,11 @@ package com.miniProject.miniShop.controller;
 
 import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.dto.CategoryDto;
+import com.miniProject.miniShop.dto.CategorySearchRequest;
 import com.miniProject.miniShop.model.Category;
 import com.miniProject.miniShop.service.CategoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +22,14 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    //    @GetMapping
+//    public ResponseEntity<ApiResponse<List<Category>>> getAllCategories() {
+//        // return ResponseEntity.ok(categoryService.getAllCategory()); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(categoryService.getAllCategory()));
+//    }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Category>>> getAllCategories() {
-        // return ResponseEntity.ok(categoryService.getAllCategory()); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(categoryService.getAllCategory()));
+    public ResponseEntity<ApiResponse<Page<Category>>> getAllCategories(@ModelAttribute CategorySearchRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(categoryService.getAllCategory(request)));
     }
 
     @GetMapping("/{id}")

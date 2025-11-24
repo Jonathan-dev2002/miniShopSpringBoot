@@ -2,10 +2,16 @@ package com.miniProject.miniShop.service;
 
 import com.miniProject.miniShop.dto.AddressDto;
 import com.miniProject.miniShop.dto.CreateOrderRequest;
+import com.miniProject.miniShop.dto.OrderSearchRequest;
 import com.miniProject.miniShop.model.*;
 import com.miniProject.miniShop.repository.*;
+import com.miniProject.miniShop.spec.OrderSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +29,16 @@ public class OrderService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final ProductRepository productRepository;
+
+    private Page<Order> getOrdersWithPagination(UUID userId, OrderSearchRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        Specification<Order> spec = Specification.where(OrderSpecification.hasUserId(userId))
+                .and(OrderSpecification.hasStatus(request.getStatus()))
+                .and(OrderSpecification.hasKeyword(request.getKeyword()));
+
+        return orderRepository.findAll(spec, pageable);
+    }
 
     @Transactional
     public Order createOrder(String email, CreateOrderRequest request) {
@@ -94,9 +110,13 @@ public class OrderService {
         return savedOrder;
     }
 
-    public List<Order> getMyOrders(String email) {
+    //    public List<Order> getMyOrders(String email) {
+//        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+//        return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+//    }
+    public Page<Order> getMyOrders(String email, OrderSearchRequest request) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        return getOrdersWithPagination(user.getId(), request);
     }
 
     public Order getOrderById(UUID id, String email) {
@@ -122,14 +142,28 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    //    public List<Order> getAllOrders() {
+//        return orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+//    }
+    public Page<Order> getAllOrders(OrderSearchRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        Specification<Order> spec = Specification.where(OrderSpecification.hasStatus(request.getStatus()))
+                .and(OrderSpecification.hasKeyword(request.getKeyword()));
+
+        return orderRepository.findAll(spec, pageable);
     }
 
-    public List<Order> getOrdersByUserIdForAdmin(UUID userId) {
+    //    public List<Order> getOrdersByUserIdForAdmin(UUID userId) {
+//        if (!userRepository.existsById(userId)) {
+//            throw new RuntimeException("User not found");
+//        }
+//        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+//    }
+    public Page<Order> getOrdersByUserIdForAdmin(UUID userId, OrderSearchRequest request) {
         if (!userRepository.existsById(userId)) {
             throw new RuntimeException("User not found");
         }
-        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        return getOrdersWithPagination(userId, request);
     }
 }

@@ -2,12 +2,19 @@ package com.miniProject.miniShop.service;
 
 import com.miniProject.miniShop.dto.UpdateStatusRequest;
 import com.miniProject.miniShop.dto.UserDto;
+import com.miniProject.miniShop.dto.UserSearchRequest;
 import com.miniProject.miniShop.model.Role;
 import com.miniProject.miniShop.model.User;
 import com.miniProject.miniShop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.miniProject.miniShop.spec.UserSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,8 +26,18 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    //    public List<User> getAllUsers() {
+//        return userRepository.findAll();
+//    }
+    public Page<User> getAllUsers(UserSearchRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        // เริ่มต้นด้วย where (เงื่อนไขแรก) แล้วต่อด้วย and (เงื่อนไขต่อๆไป)
+        Specification<User> spec = Specification.where(UserSpecification.hasKeyword(request.getKeyword()))
+                .and(UserSpecification.hasRole(request.getRole()))
+                .and(UserSpecification.hasStatus(request.getIsActive()));
+
+        return userRepository.findAll(spec, pageable);
     }
 
     public User getUserById(UUID id) {
@@ -61,7 +78,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User updateCurrentUser(String email, UserDto request){
+    public User updateCurrentUser(String email, UserDto request) {
         User user = getUserByEmail(email);
         if (user == null) throw new RuntimeException("User not found");
 
@@ -85,7 +102,7 @@ public class UserService {
 
     public User updateUserStatus(UUID id, UpdateStatusRequest request) {
         User user = getUserById(id);
-        if(user == null) throw  new RuntimeException("User not found");
+        if (user == null) throw new RuntimeException("User not found");
         user.setIsActive(request.getIsActive());
         return userRepository.save(user);
     }

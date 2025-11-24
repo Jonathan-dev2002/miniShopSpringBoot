@@ -2,9 +2,11 @@ package com.miniProject.miniShop.controller;
 
 import com.miniProject.miniShop.dto.ApiResponse;
 import com.miniProject.miniShop.dto.ProductDto;
+import com.miniProject.miniShop.dto.ProductSearchRequest;
 import com.miniProject.miniShop.model.Product;
 import com.miniProject.miniShop.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,12 +22,16 @@ public class ProductController {
 
     private final ProductService productService;
 
+    //    @GetMapping
+//    public ResponseEntity<ApiResponse<List<Product>>> getAllProducts(@RequestParam(required = false) UUID categoryId) {
+//        List<Product> products = productService.getAllProducts(categoryId);
+//
+//        // return ResponseEntity.ok(productService.getAllProducts(categoryId)); // Code เก่า
+//        return ResponseEntity.ok(ApiResponse.success(products));
+//    }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Product>>> getAllProducts(@RequestParam(required = false) UUID categoryId) {
-        List<Product> products = productService.getAllProducts(categoryId);
-
-        // return ResponseEntity.ok(productService.getAllProducts(categoryId)); // Code เก่า
-        return ResponseEntity.ok(ApiResponse.success(products));
+    public ResponseEntity<ApiResponse<Page<Product>>> getAllProducts(@ModelAttribute ProductSearchRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(productService.getAllProducts(request)));
     }
 
     @GetMapping("/{id}")

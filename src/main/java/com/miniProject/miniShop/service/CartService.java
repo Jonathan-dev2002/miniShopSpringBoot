@@ -1,6 +1,7 @@
 package com.miniProject.miniShop.service;
 
 import com.miniProject.miniShop.dto.AddToCartRequest;
+import com.miniProject.miniShop.dto.CartSearchRequest;
 import com.miniProject.miniShop.model.Cart;
 import com.miniProject.miniShop.model.CartItem;
 import com.miniProject.miniShop.model.Product;
@@ -9,7 +10,13 @@ import com.miniProject.miniShop.repository.CartItemRepository;
 import com.miniProject.miniShop.repository.CartRepository;
 import com.miniProject.miniShop.repository.ProductRepository;
 import com.miniProject.miniShop.repository.UserRepository;
+import com.miniProject.miniShop.spec.CartItemSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +31,18 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+
+    private Page<CartItem> getCartItemsWithPagination(User user, CartSearchRequest request) {
+        Cart cart = getOrCreateCart(user);
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), Sort.by("createdAt").descending());
+
+        // ต้องกรองว่าเป็นของตะกร้าใบนี้ (hasCartId) + ค้นหาชื่อสินค้า (hasKeyword)
+        Specification<CartItem> spec = Specification.where(CartItemSpecification.hasCartId(cart.getId()))
+                .and(CartItemSpecification.hasKeyword(request.getKeyword()));
+
+        return cartItemRepository.findAll(spec, pageable);
+    }
 
     public Cart getOrCreateCart(User user) {
         return cartRepository.findByUser(user)
@@ -61,10 +80,14 @@ public class CartService {
         }
     }
 
-    public List<CartItem> getCartItems(String email) {
+    //    public List<CartItem> getCartItems(String email) {
+//        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+//        Cart cart = getOrCreateCart(user);
+//        return cartItemRepository.findByCartId(cart.getId());
+//    }
+    public Page<CartItem> getCartItems(String email, CartSearchRequest request) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        Cart cart = getOrCreateCart(user);
-        return cartItemRepository.findByCartId(cart.getId());
+        return getCartItemsWithPagination(user, request);
     }
 
     @Transactional
@@ -87,10 +110,14 @@ public class CartService {
         cartItemRepository.deleteById(id);
     }
 
-    public List<CartItem> getCartItemsByUserId(UUID userId) {
+    //    public List<CartItem> getCartItemsByUserId(UUID userId) {
+//        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+//        Cart cart = getOrCreateCart(user);
+//        return cartItemRepository.findByCartId(cart.getId());
+//    }
+    public Page<CartItem> getCartItemsByUserId(UUID userId, CartSearchRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        Cart cart = getOrCreateCart(user);
-        return cartItemRepository.findByCartId(cart.getId());
+        return getCartItemsWithPagination(user, request);
     }
 
     @Transactional
