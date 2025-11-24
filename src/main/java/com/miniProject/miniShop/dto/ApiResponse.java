@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
@@ -17,6 +18,7 @@ public class ApiResponse<T> {
     private String message;
     private T data;
     private LocalDateTime timestamp;
+    private Integer statusCode;
 
     //"สำเร็จ" (Success)
     public static <T> ApiResponse<T> success(T data) {
@@ -24,6 +26,7 @@ public class ApiResponse<T> {
                 .success(true)
                 .message("Operation successful")
                 .data(data)
+                .statusCode(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
@@ -34,6 +37,7 @@ public class ApiResponse<T> {
                 .success(true)
                 .message(message)
                 .data(data)
+                .statusCode(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
@@ -43,6 +47,16 @@ public class ApiResponse<T> {
         return ApiResponse.<T>builder()
                 .success(false)
                 .message(message)
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    public static <T> ApiResponse<T> error(String message, HttpStatus status) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .message(message)
+                .statusCode(status.value())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
