@@ -1,10 +1,10 @@
 package com.miniProject.miniShop.dto;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class CategorySearchRequest {
-    private int page = 0;
-    private int size = 10;
-    private String keyword;
+@EqualsAndHashCode(callSuper = true)
+public class CategorySearchRequest extends BaseSearchRequest{
+
 }

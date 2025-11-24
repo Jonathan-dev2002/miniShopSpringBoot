@@ -2,11 +2,10 @@ package com.miniProject.miniShop.dto;
 
 import com.miniProject.miniShop.model.OrderStatus;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class OrderSearchRequest {
-    private int page = 0;
-    private int size = 10;
-    private String keyword;
+@EqualsAndHashCode(callSuper = true)
+public class OrderSearchRequest extends BaseSearchRequest{
     private OrderStatus status;
 }
